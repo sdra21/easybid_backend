@@ -96,12 +96,52 @@ function   printSuccess($message = "none")
 {
     echo     json_encode(array("status" => "success", "message" => $message));
 }
+function updateData($table, $data, $where, $json = true)
+{
+    global $con;
+    $cols = array();
+    $vals = array();
+
+    foreach ($data as $key => $val) {
+        $vals[] = "$val";
+        $cols[] = "`$key` =  ? ";
+    }
+    $sql = "UPDATE $table SET " . implode(', ', $cols) . " WHERE $where";
+
+    $stmt = $con->prepare($sql);
+    $stmt->execute($vals);
+    $count = $stmt->rowCount();
+    if ($json == true) {
+        if ($count > 0) {
+            echo json_encode(array("status" => "success"));
+        } else {
+            echo json_encode(array("status" => "failure"));
+        }
+    }
+    return $count;
+}
+
+function deleteData($table, $where, $json = true)
+{
+    global $con;
+    $stmt = $con->prepare("DELETE FROM $table WHERE $where");
+    $stmt->execute();
+    $count = $stmt->rowCount();
+    if ($json == true) {
+        if ($count > 0) {
+            echo json_encode(array("status" => "success"));
+        } else {
+            echo json_encode(array("status" => "failure"));
+        }
+    }
+    return $count;
+}
 
 function imageUpload( $dir , $imageRequest)
 {
     global $msgError;
    if(isset($_FILES[$imageRequest])){
-    $imagename  = rand(1000, 10000) . $_FILES[$imageRequest]['name'];
+    $imagename  = $_FILES[$imageRequest]['name'];
     $imagetmp   = $_FILES[$imageRequest]['tmp_name'];
     $imagesize  = $_FILES[$imageRequest]['size'];
     $allowExt   = array("jpg", "png", "gif", "mp3", "pdf");
